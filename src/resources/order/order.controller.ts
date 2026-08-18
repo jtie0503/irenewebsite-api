@@ -1,6 +1,8 @@
 import { useOrderRepository } from "./order.repository";
+import { useDogRepository } from "../dog/dog.repository";
 import { schemaOrder, schemaUpdateOrder } from "./order.model";
 import { Request, Response, NextFunction } from "express";
+import { sendReservationConfirmation } from "../../utils/email.service";
 
 export  function useOrderController(){
 
@@ -11,7 +13,11 @@ export  function useOrderController(){
        getById: _getById,
        updateById: _updateById,
        deleteById: _deleteById,
-    } = useOrderRepository()
+    } = useOrderRepository();
+
+    const {
+    getById: _getDogById
+} = useDogRepository();
 
     async function add(req:Request, res:Response, next: NextFunction){
         const value = req.body;
@@ -22,6 +28,20 @@ export  function useOrderController(){
         }
         try {
             const items = await _add(value)
+              console.log("ORDER SAVED:", items)
+            const dog = await _getDogById(value.dogId);
+            console.log("DOG FOUND:", dog);
+             console.log("CALLING EMAIL SERVICE...");
+           // await sendReservationConfirmation(
+            //     value.email,
+            //     value.customerName,
+            //     value.contactNumber,
+            //     value.deliveryMethod,
+            //     value.address,
+            //     dog,
+            //     value.status
+            // )
+            
             res.json({message:items})
         } catch (error) {
              next(error)
